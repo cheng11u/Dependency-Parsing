@@ -1,0 +1,10 @@
+# sent_id = fr-ud-train_00004
+# text = Toutefois, les filles adorent les desserts.
+1	Toutefois	toutefois	ADV	_	_	5	mod	_	SpaceAfter=No|wordform=toutefois
+2	,	,	PUNCT	_	_	1	punct	_	_
+3	les	le	DET	_	Definite=Def|Number=Plur|PronType=Art	4	det	_	_
+4	filles	fille	NOUN	_	Gender=Fem|Number=Plur	1	subj	_	_
+5	adorent	adorer	VERB	_	Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+6	les	le	DET	_	Definite=Def|Number=Plur|PronType=Art	7	det	_	_
+7	desserts	dessert	NOUN	_	Gender=Masc|Number=Plur	5	comp:obl	_	SpaceAfter=No
+8	.	.	PUNCT	_	_	5	punct	_	_
