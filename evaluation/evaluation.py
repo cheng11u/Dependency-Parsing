@@ -55,7 +55,7 @@ def extract_tokens(filename):
     lemma, upos, xpos, etc.
     """
     res = []
-    # IDs are changed so that every token have a unique ID for the whole corpus
+    # IDs are changed so that each token has a unique ID for the whole corpus
     current_id = 1
     with open(filename, 'r', encoding='utf-8') as f:
         sentences = parse(f.read())
