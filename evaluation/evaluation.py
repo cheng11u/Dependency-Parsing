@@ -146,7 +146,7 @@ def compute_accuracy(pred_file, gold_file):
 
 def get_head_from_id(tokens, token_id):
     """
-    Gives the head of the governor of the token identified by token_id.
+    Gives the governor of the token identified by token_id.
 
     Parameters:
     tokens (list): list of tokens represented by instances of the class Word
