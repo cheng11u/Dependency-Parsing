@@ -1,6 +1,6 @@
 from difflib import SequenceMatcher
 from conllu import parse
-
+import re
 
 class Word:
     """
@@ -41,6 +41,8 @@ class Word:
             return hash(self.form)
         return hash(None)
 
+ 
+
 
 
 def extract_tokens(filename):
@@ -51,24 +53,46 @@ def extract_tokens(filename):
     filename (str): Name of the CoNLL-U file.
 
     Returns:
-    List of tokens, each token having a dictionary whose keys are form, 
+    List of tokens, each token having the attributes form, 
     lemma, upos, xpos, etc.
     """
-    res = []
-    # IDs are changed so that each token has a unique ID for the whole corpus
+    # Regex to check whether a line starts with a unique number like 25 (but not 25-26)
+    regex_id = re.compile('^[0-9]+\t')
     current_id = 1
+    res = list()
     with open(filename, 'r', encoding='utf-8') as f:
-        sentences = parse(f.read())
-        for sentence in sentences:
-            for token in sentence:
-                w = Word(**token)
-                if 'head' in w.__dict__:
-                    # calculate the id difference between the word and its governor (except for the root of the sentence)
-                    if w.head is not None and w.head != 0:
-                        diff = w.head - w.id
-                        # as the IDs are modified the head is modified as well
-                        w.head = current_id + diff
-                w.id = current_id
+        lines = f.readlines()
+        for line in lines:
+            # if the line does not start with a number or starts with a range of numbers
+            #  it is ignored
+            if re.search(regex_id, line):
+                fields = line.split('\t')
+                form = fields[1] if fields[1] != '_' else None
+                lemma = fields[2] if fields[2] != '_' else None
+                upos = fields[3] if fields[3] != '_' else None
+                xpos = fields[4] if fields[4] != '_' else None
+                if fields[5] == "_":
+                    feats = None
+                else:
+                    feats = dict()
+                    list_feats = fields[5].split('|')
+                    for feat in list_feats:
+                        key, value = feat.split('=')
+                        feats[key] = value
+                head = int(fields[6]) if fields[6] != '_' else None
+                deprel = fields[7] if fields[7] != '_' else None
+                deps = fields[8] if fields[8] != '_' else None
+                if fields[9] == "_\n":
+                    misc = None
+                else:
+                    misc = dict()
+                    list_misc = fields[9].split('|')
+                    for elt in list_misc:
+                        fields = elt.split('=')
+                        key, value = fields
+                        misc[key] = value[:-1]
+                w = Word(id=current_id, form=form, lemma=lemma, upos=upos, 
+                         xpos=xpos, feats=feats, head=head, deprel=deprel, deps=deps, misc=misc)
                 res.append(w)
                 current_id += 1
     return res
