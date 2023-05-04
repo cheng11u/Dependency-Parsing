@@ -1,6 +1,7 @@
 from difflib import SequenceMatcher
 from conllu import parse
 import re
+import sys
 
 class Word:
     """
@@ -67,6 +68,11 @@ def extract_tokens(filename):
             # it is ignored
             if re.search(regex_id, line):
                 fields = line.split('\t')
+
+                # If a line is incomplete, it is completed
+                while len(fields) < 10:
+                    fields.append('_')
+    
                 form = fields[1] if fields[1] != '_' else None
                 lemma = fields[2] if fields[2] != '_' else None
                 upos = fields[3] if fields[3] != '_' else None
@@ -77,8 +83,9 @@ def extract_tokens(filename):
                     feats = dict()
                     list_feats = fields[5].split('|')
                     for feat in list_feats:
-                        key, value = feat.split('=')
-                        feats[key] = value
+                        if '=' in feat:
+                            key, value = feat.split('=')
+                            feats[key] = value
                 head = int(fields[6]) if fields[6] != '_' else None
                 deprel = fields[7] if fields[7] != '_' else None
                 deps = fields[8] if fields[8] != '_' else None
@@ -240,7 +247,7 @@ def compute_uas_las(pred, gold):
         pred_exists_uas = 'head' in align[0].__dict__ and align[0].head is not None
         pred_exists_las = pred_exists_uas and 'deprel' in align[0].__dict__ and align[0].deprel is not None
         gold_exists_uas = 'head' in align[1].__dict__ and align[1].head is not None
-        gold_exists_las = pred_exists_uas and 'deprel' in align[1].__dict__ and align[1].deprel is not None
+        gold_exists_las = gold_exists_uas and 'deprel' in align[1].__dict__ and align[1].deprel is not None
         
         # Check whether the governor is correct
         correct_governor = get_head_from_id(pred_tokens, align[0].id) == get_head_from_id(gold_tokens, align[1].id)
@@ -281,8 +288,8 @@ def compute_uas_las(pred, gold):
 
 
 def main():
-    pred_file = './annot1.conllu'
-    gold_file = './gold.conllu'
+    pred_file = sys.argv[1]
+    gold_file = sys.argv[2]
     print('Tokenization:', compute_tokenization_score(pred_file, gold_file))
     print('Tag:', compute_accuracy(pred_file, gold_file))
     result = compute_uas_las(pred_file, gold_file)
