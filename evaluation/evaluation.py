@@ -64,7 +64,7 @@ def extract_tokens(filename):
         lines = f.readlines()
         for line in lines:
             # if the line does not start with a number or starts with a range of numbers
-            #  it is ignored
+            # it is ignored
             if re.search(regex_id, line):
                 fields = line.split('\t')
                 form = fields[1] if fields[1] != '_' else None
