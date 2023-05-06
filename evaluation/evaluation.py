@@ -1,5 +1,4 @@
 from difflib import SequenceMatcher
-from conllu import parse
 import re
 import sys
 
