@@ -58,7 +58,8 @@ def extract_tokens(filename):
     """
     # Regex to check whether a line starts with a unique number like 25 (but not 25-26)
     regex_id = re.compile('^[0-9]+\t')
-    current_id = 1
+    # Change the IDs so that a word has a unique ID for the whole corpus
+    new_id = 1
     res = list()
     with open(filename, 'r', encoding='utf-8') as f:
         lines = f.readlines()
@@ -72,6 +73,7 @@ def extract_tokens(filename):
                 while len(fields) < 10:
                     fields.append('_')
     
+                id = int(fields[0])
                 form = fields[1] if fields[1] != '_' else None
                 lemma = fields[2] if fields[2] != '_' else None
                 upos = fields[3] if fields[3] != '_' else None
@@ -85,7 +87,15 @@ def extract_tokens(filename):
                         if '=' in feat:
                             key, value = feat.split('=')
                             feats[key] = value
-                head = int(fields[6]) if fields[6] != '_' else None
+                if fields[6] == '_':
+                    head = None
+                else:
+                    head = int(fields[6])
+                    if head != 0:
+                        diff = head - id
+                        head = new_id + diff
+
+                    
                 deprel = fields[7] if fields[7] != '_' else None
                 deps = fields[8] if fields[8] != '_' else None
                 if fields[9] == "_\n":
@@ -97,10 +107,10 @@ def extract_tokens(filename):
                         fields = elt.split('=')
                         key, value = fields
                         misc[key] = value[:-1]
-                w = Word(id=current_id, form=form, lemma=lemma, upos=upos, 
+                w = Word(id=new_id, form=form, lemma=lemma, upos=upos, 
                          xpos=xpos, feats=feats, head=head, deprel=deprel, deps=deps, misc=misc)
                 res.append(w)
-                current_id += 1
+                new_id += 1
     return res
 
 def get_alignment(pred, gold):

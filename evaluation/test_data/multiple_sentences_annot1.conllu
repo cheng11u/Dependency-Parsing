@@ -1,0 +1,10 @@
+# sent_id = 1
+# text = I don't come. See you tomorrow.
+1	I	I	PRON	_	_	_	_	_	_
+2	don't	don't	VERB	_	_	0	root	_	_
+3	come	come	VERB	_	_	2	comp:aux	_	_
+4	.	.	DET	_	_	_	_	_	_
+5	See	see	VERB	_	_	3	mod	_	_
+6	you	you	PRON	_	_	5	comp:obj	_	_
+7	tomorrow	tomorrow	NOUN	_	_	5	comp:pred	_	_
+8	.	.	PUNCT	_	_	1	punct	_	_

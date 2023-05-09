@@ -1,0 +1,13 @@
+# newdoc id = input.txt
+# newpar
+# sent_id = 1
+# text = The boy whom I talk to is tall.
+1	The	_	DET	_	_	2	det	_	_
+2	boy	_	NOUN	_	_	7	subj	_	_
+3	whom	_	PRON	_	_	6	comp:aux	_	_
+4	I	_	PRON	_	_	5	subj	_	_
+5	talk	_	VERB	_	_	2	mod	_	_
+6	to	_	PART	_	_	2	comp:obl	_	_
+7	is	_	AUX	_	_	0	root	_	_
+8	tall	_	ADJ	_	_	7	comp:pred	_	_
+9	.	_	PUNCT	_	_	7	punct	_	_

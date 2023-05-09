@@ -1,0 +1,14 @@
+# newdoc
+# newpar
+# sent_id = 1
+# text = The boy whom I talk to is tall.
+1	The	the	DET	RD	Definite=Def|PronType=Art	2	det	_	_
+2	boy	boy	NOUN	S	Number=Sing	0	subj	_	_
+3	whom	who	PRON	PR	PronType=Rel	5	comp:obj	_	_
+4	I	I	PRON	PE	Number=Sing|Person=1|PronType=Prs	5	subj	_	_
+5	talk	talk	VERB	V	Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin	2	mod@relcl	_	_
+6	to	to	PART	PART	_	5	comp:obl	_	_
+7	is	be	AUX	V	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	6	comp:obj	_	_
+8	tall	tall	ADJ	A	Degree=Pos	7	comp:pred	_	SpaceAfter=No
+9	.	.	PUNCT	FS	_	0	punct	_	SpacesAfter=\n
+
