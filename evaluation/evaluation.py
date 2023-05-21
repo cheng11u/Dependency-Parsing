@@ -25,7 +25,6 @@ class Word:
     
     def __eq__(self, other):
         # I consider that two token are equal if they have the same form
-        # and the gap between their id and their head is the same
         attr = 'form'
         if other is None:
             return self is None
