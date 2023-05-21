@@ -25,6 +25,7 @@ class Word:
     
     def __eq__(self, other):
         # I consider that two token are equal if they have the same form
+        # and the gap between their id and their head is the same
         attr = 'form'
         if other is None:
             return self is None
@@ -35,6 +36,7 @@ class Word:
         elif attr not in other.__dict__:
             return attr not in self.__dict__
         return self.form == other.form
+    
     
     def __hash__(self):
         if 'form' in self.__dict__:
@@ -131,6 +133,8 @@ def get_alignment(pred, gold):
         edit, pred_lo, pred_hi, gold_lo, gold_hi = diff
         if edit == 'equal':
             aligned.extend(zip(pred[pred_lo:pred_hi], gold[gold_lo:gold_hi]))
+
+    
     return aligned
 
 def compute_tokenization_score(pred_file, gold_file):
@@ -146,10 +150,14 @@ def compute_tokenization_score(pred_file, gold_file):
     Returns:
     Score for tokenization (between 0 and 1)
     """
-    token_pred = extract_tokens(pred_file)
-    token_gold = extract_tokens(gold_file)
+    token_pred = [x for x in extract_tokens(pred_file)]
+    token_gold = [x for x in extract_tokens(gold_file)]
     alignment = get_alignment(token_pred, token_gold)
-    nb_correct = len(alignment)
+
+    nb_correct = 0
+    for (pred, gold) in alignment:
+        if pred.form == gold.form:
+            nb_correct += 1
     total = len(token_gold)
     return nb_correct / total
 
@@ -227,6 +235,52 @@ def get_head_from_id(tokens, token_id):
                 return current_token
     return None
 
+def compute_diff_word_head(tokens, w):
+    """
+    Compute the index difference between a word and its head in relation to the list.
+    The IDs must be in ascending order.
+
+    Parameters:
+    tokens: list of words containing the word w
+    w: word for which we want to its position in relation to the head
+
+    Returns:
+    Integer representing the position of the word w in relation to its head
+    (None if w is the root of the sentence).
+    Negative if the head is before w, positive if it is after w.
+    """
+    i = 0
+    found = False
+    while i < len(tokens) and not found:
+        if tokens[i].id == w.id:
+            found = True
+        else:
+            i += 1
+    
+    if not found:
+        raise ValueError('The word is not in the list')
+    
+    res = 0
+    if w.head < w.id:
+        # If the head is before the word, move left
+        while tokens[i].id != w.head and i >= 0:
+            res -= 1
+            i -= 1
+    else:
+        # If the head is after the word, move right
+        while tokens[i].id != w.head and i < len(tokens):
+            res += 1
+            i += 1
+    if i >= 0 and i < len(tokens):
+        return res
+    return None
+
+
+        
+
+
+
+
 def compute_uas_las(pred, gold):
     """
     Computes precision, recall and F1 for UAS and LAS.
@@ -251,32 +305,41 @@ def compute_uas_las(pred, gold):
 
     # Only the words that are correctly aligned are considered
     alignment = get_alignment(pred_tokens, gold_tokens)
-    for align in alignment:
+    pred_align = [x[0] for x in alignment]
+    gold_align = [x[1] for x in alignment]
+    
+    for i, align in enumerate(alignment):
         # Check whether the governor and label are defined
         pred_exists_uas = 'head' in align[0].__dict__ and align[0].head is not None
         pred_exists_las = pred_exists_uas and 'deprel' in align[0].__dict__ and align[0].deprel is not None
         gold_exists_uas = 'head' in align[1].__dict__ and align[1].head is not None
         gold_exists_las = gold_exists_uas and 'deprel' in align[1].__dict__ and align[1].deprel is not None
         
-        # Check whether the governor is correct
-        correct_governor = get_head_from_id(pred_tokens, align[0].id) == get_head_from_id(gold_tokens, align[1].id)
+        # Check whether the form of the governor is correct
+        head_pred = get_head_from_id(pred_tokens, align[0].id) 
+        head_gold = get_head_from_id(gold_tokens, align[1].id) 
 
+        correct_governor = False
         if pred_exists_uas:
             nb_total_pred_uas += 1
         if gold_exists_uas:
             nb_total_gold_uas += 1
         if pred_exists_uas and gold_exists_uas:
-            if correct_governor:
+            diff_pred = compute_diff_word_head(pred_align, align[0])
+            diff_gold = compute_diff_word_head(gold_align, align[1])
+            correct_governor = head_pred == head_gold and head_pred is not None
+            correct_diff = diff_pred == diff_gold
+            if correct_governor and correct_diff:
                 nb_correct_governor += 1
 
         if pred_exists_las:
             nb_total_pred_las += 1
         if gold_exists_las:
             nb_total_gold_las += 1
-        if pred_exists_las and gold_exists_las and correct_governor and align[0].deprel == align[1].deprel:
+        if pred_exists_las and gold_exists_las and correct_governor and correct_diff and align[0].deprel == align[1].deprel:
             nb_correct_governor_label += 1
 
-        
+    
     results = dict()
     results['UAS precision'] = nb_correct_governor / nb_total_pred_uas
     results['UAS recall'] = nb_correct_governor / nb_total_gold_uas
@@ -284,7 +347,7 @@ def compute_uas_las(pred, gold):
         results['UAS'] = 0.0
     else:
         results['UAS'] = (2 * results['UAS precision'] * results['UAS recall'])/(results['UAS precision'] + results['UAS recall'])
-        
+    
     results['LAS precision'] = nb_correct_governor_label / nb_total_pred_las
     results['LAS recall'] = nb_correct_governor_label / nb_total_gold_las
     if results['LAS precision'] == 0 and results['LAS recall'] == 0:
