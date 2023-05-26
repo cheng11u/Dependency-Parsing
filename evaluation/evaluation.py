@@ -262,23 +262,17 @@ def compute_diff_word_head(tokens, w):
     res = 0
     if w.head < w.id:
         # If the head is before the word, move left
-        while tokens[i].id != w.head and i >= 0:
+        while tokens[i].id > w.head and i >= 0:
             res -= 1
             i -= 1
     else:
         # If the head is after the word, move right
-        while tokens[i].id != w.head and i < len(tokens):
+        while tokens[i].id < w.head and i < len(tokens):
             res += 1
             i += 1
     if i >= 0 and i < len(tokens):
         return res
     return None
-
-
-        
-
-
-
 
 def compute_uas_las(pred, gold):
     """
