@@ -119,8 +119,8 @@ def get_alignment(pred, gold):
     Returns the common part between two files.
 
     Parameters:
-    pred (str): Path to the prediction file.
-    gold (str): Path to the gold file.
+    pred (list): List of tokens in the prediction file.
+    gold (list): List of tokens in the gold file.
 
     Returns:
     List of tuples, each tuple containing two tokens corresponding to the
@@ -136,21 +136,19 @@ def get_alignment(pred, gold):
     
     return aligned
 
-def compute_tokenization_score(pred_file, gold_file):
+def compute_tokenization_score(token_pred, token_gold):
     """
     Computes the tokenization score. It corresponds to the number of words
     that are correctly segmented divided by the total number of words
     in the gold file.
 
     Parameters:
-    pred_file (str): Path to the prediction file.
-    gold_file (str): Path to the gold file.
+    token_pred (list): List of tokens in the prediction file.
+    token_gold (list): List of tokens in the gold file.
 
     Returns:
     Score for tokenization (between 0 and 1)
     """
-    token_pred = [x for x in extract_tokens(pred_file)]
-    token_gold = [x for x in extract_tokens(gold_file)]
     alignment = get_alignment(token_pred, token_gold)
 
     nb_correct = 0
@@ -160,20 +158,18 @@ def compute_tokenization_score(pred_file, gold_file):
     total = len(token_gold)
     return nb_correct / total
 
-def compute_accuracy(pred_file, gold_file):
+def compute_accuracy(token_pred, token_gold):
     """
     Computes the accuracy score. It corresponds to the number of words that have
     the correct part of speech divided by the number of words that are correctly aligned.
 
     Parameters:
-    pred_file (str): Path to the prediction file.
-    gold_file (str): Path to the gold file.
+    token_prede (list): Tokens of the prediction file.
+    token_gold (list): Tokens of the gold file.
 
     Returns:
     Accuracy (between 0 and 1)
     """
-    token_pred = extract_tokens(pred_file)
-    token_gold = extract_tokens(gold_file)
     alignment = get_alignment(token_pred, token_gold)
 
     total = len(alignment)
@@ -190,6 +186,44 @@ def compute_accuracy(pred_file, gold_file):
             nb_correct += 1
 
     return nb_correct / total
+
+def compute_prf(token_pred, token_gold, tag):
+    """
+    Computes the precision, recall and F1-score of a given tag.
+
+    Parameters:
+    token_pred (list): Tokens of the prediction file.
+    token_gold (list): Tokens of the gold file.
+    tag (str): Tag used for computations
+
+    Returns:
+    Tuple (p, r, f) where p is the precision, r is the recall and f is the F1-score
+    """
+    alignment = get_alignment(token_pred, token_gold)
+    correct = 0
+    expected = 0
+    provided = 0
+    for align in alignment:
+        pred = align[0]
+        gold = align[1]
+        if 'upos' in pred.__dict__ and pred.upos == tag:
+            provided += 1
+            if 'upos' in gold.__dict__ and gold.upos == tag:
+                correct += 1
+        if 'upos' in gold.__dict__ and gold.upos == tag:
+            expected += 1
+    
+    if provided == 0 or expected == 0:
+        return None
+    
+    p = correct / provided
+    r = correct / expected
+    if p == 0 and r == 0:
+        f = 0
+    else:
+        f = (2 * p * r) / (p + r)
+    return (p, r, f)
+
 
 def get_head_from_id(tokens, token_id):
     """
@@ -274,20 +308,17 @@ def compute_diff_word_head(tokens, w):
         return res
     return None
 
-def compute_uas_las(pred, gold):
+def compute_uas_las(pred_tokens, gold_tokens):
     """
     Computes precision, recall and F1 for UAS and LAS.
 
     Parameters:
-    pred: Path to the file containing the prediction data
-    gold: Path to the file containing the gold data
+    pred_tokens: List of tokens in the prediction file
+    gold_tokens: List of tokens in the gold file
 
     Returns:
     Dictionary containing precision, recall and F1 for UAS and LAS
     """
-    # Extract tokens from files
-    pred_tokens = extract_tokens(pred)
-    gold_tokens = extract_tokens(gold)
 
     nb_correct_governor = 0
     nb_correct_governor_label = 0
@@ -355,9 +386,11 @@ def compute_uas_las(pred, gold):
 def main():
     pred_file = sys.argv[1]
     gold_file = sys.argv[2]
-    print('Tokenization:', compute_tokenization_score(pred_file, gold_file))
-    print('Tag:', compute_accuracy(pred_file, gold_file))
-    result = compute_uas_las(pred_file, gold_file)
+    pred_tokens = extract_tokens(pred_file)
+    gold_tokens = extract_tokens(gold_file)
+    print('Tokenization:', compute_tokenization_score(pred_tokens, gold_tokens))
+    print('Tag:', compute_accuracy(pred_tokens, gold_tokens))
+    result = compute_uas_las(pred_tokens, gold_tokens)
     for key, value in result.items():
         print('{}: {}'.format(key, value))
     
